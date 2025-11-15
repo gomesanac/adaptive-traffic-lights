@@ -1,3 +1,4 @@
+export * from './labels'
 export * from './machine'
 export * from './metrics'
 export * from './plan'
