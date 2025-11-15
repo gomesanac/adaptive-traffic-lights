@@ -1,6 +1,10 @@
 import type { Plan, State } from './types';
 
 export function step(plan: Plan, t: number): State {
+  if (!plan) {
+    return { phase: 'AllRed', t: 0, tRemaining: 0 };
+  }
+
   const { greenNS, pedNS, greenEW, pedEW, amber, allRed } = plan;
 
   const p1 = greenNS;

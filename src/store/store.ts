@@ -36,17 +36,47 @@ type S = {
 
 const ids = Object.keys(INTERSECTIONS) as IntersectionId[];
 
+function buildPlans(
+  hour: HourKey,
+  cfg: Config,
+  prev?: Record<IntersectionId, Plan>
+): Record<IntersectionId, Plan> {
+  const flows = MOCK_TRAFFIC[hour];
+  const plans = {} as Record<IntersectionId, Plan>;
+
+  ids.forEach((id) => {
+    const previousPlan = prev?.[id];
+    plans[id] = computePlan(flows[id], cfg, previousPlan);
+  });
+
+  return plans;
+}
+
+const initialHour: HourKey = '07:00';
+const initialCfg: Config = DEFAULT_CONFIG;
+const initialPlans = buildPlans(initialHour, initialCfg);
+
 export const useStore = create<S>((set, get) => ({
-  hour: '07:00',
+  hour: initialHour,
   setHour: (hour) => {
-    set({ hour, t: 0 });
-    get().recomputePlans();
+    set({ hour });
+
+    const { cfg, plans } = get();
+    const newPlans = buildPlans(hour, cfg, plans);
+
+    set({ plans: newPlans, prevPlans: newPlans, t: 0 });
   },
 
-  cfg: DEFAULT_CONFIG,
+  cfg: initialCfg,
   setCfg: (c) => {
-    set({ cfg: { ...get().cfg, ...c } });
-    get().recomputePlans();
+    const cfg = { ...get().cfg, ...c };
+
+    set({ cfg });
+
+    const { hour, plans } = get();
+    const newPlans = buildPlans(hour, cfg, plans);
+
+    set({ plans: newPlans, prevPlans: newPlans, t: 0 });
   },
 
   t: 0,
@@ -58,29 +88,14 @@ export const useStore = create<S>((set, get) => ({
   },
   reset: () => set({ t: 0 }),
 
-  plans: {} as Record<IntersectionId, Plan>,
-  prevPlans: {} as Record<IntersectionId, Plan | undefined>,
+  plans: initialPlans,
+  prevPlans: initialPlans,
 
   recomputePlans: () => {
-    const { hour, cfg, plans: oldPlans } = get();
-    const flows = MOCK_TRAFFIC[hour];
+    const { hour, cfg, plans } = get();
+    const newPlans = buildPlans(hour, cfg, plans);
 
-    const nextPlans: Record<IntersectionId, Plan> = {} as Record<IntersectionId, Plan>;
-    const prevPlans: Record<IntersectionId, Plan | undefined> = {} as Record<
-      IntersectionId,
-      Plan
-    >;
-
-    ids.forEach((id) => {
-      const prev = oldPlans[id]; // plano anterior desse cruzamento
-      const plan = computePlan(flows[id], cfg, prev); // suavizado com prev
-      nextPlans[id] = plan;
-      prevPlans[id] = plan; // guarda como “anterior” para próxima rodada
-    });
-
-    set({ plans: nextPlans, prevPlans });
-    // ressincroniza o relógio para evitar saltos visuais
-    set({ t: 0 });
+    set({ plans: newPlans, prevPlans: newPlans, t: 0 });
   },
 
   getState: (id) => step(get().plans[id], get().t),
