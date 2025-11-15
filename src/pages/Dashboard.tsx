@@ -76,8 +76,8 @@ export function Dashboard() {
                 <ul className="list-disc ml-4">
                   <li>Verde Norte–Sul: {plans[id].greenNS}s</li>
                   <li>Verde Leste–Oeste: {plans[id].greenEW}s</li>
-                  <li>Pedestres N–S: {plans[id].pedNS}s</li>
-                  <li>Pedestres L–O: {plans[id].pedEW}s</li>
+                  <li>Pedestres Norte–Sul: {plans[id].pedNS}s</li>
+                  <li>Pedestres Leste–Oeste: {plans[id].pedEW}s</li>
                   <li>Atenção (amarelo): {plans[id].amber}s</li>
                   <li>Intertravamento: {plans[id].allRed}s</li>
                   <li>
